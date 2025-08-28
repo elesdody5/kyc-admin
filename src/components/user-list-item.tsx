@@ -1,10 +1,10 @@
 'use client';
 
 import { User } from '@/components/user-card';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Info } from 'lucide-react';
+import { CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Button } from './ui/button';
 
 type UserListItemProps = {
   user: User;
@@ -27,23 +28,29 @@ export function UserListItem({ user, status }: UserListItemProps) {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Card className="hover:bg-muted/50 cursor-pointer transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between p-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-10 w-10 border">
-                <AvatarImage src={user.image} alt={user.name} data-ai-hint={user.imageHint} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="overflow-hidden">
-                <p className="font-semibold truncate">{user.name}</p>
-                <p className="text-sm text-muted-foreground">ID: {user.id}</p>
-              </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-10 w-10 border">
+              <AvatarImage src={user.image} alt={user.name} data-ai-hint={user.imageHint} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="overflow-hidden">
+              <p className="font-semibold truncate">{user.name}</p>
+              <p className="text-sm text-muted-foreground">ID: {user.id}</p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
             {statusIcon}
-          </CardHeader>
-        </Card>
-      </DialogTrigger>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Eye className="h-5 w-5" />
+                <span className="sr-only">View Details</span>
+              </Button>
+            </DialogTrigger>
+          </div>
+        </CardHeader>
+      </Card>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-4">
