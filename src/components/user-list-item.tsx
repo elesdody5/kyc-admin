@@ -38,7 +38,7 @@ export function UserListItem({ user, status }: UserListItemProps) {
             </Avatar>
             <div className="overflow-hidden">
               <p className="font-semibold truncate">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{user.id.split('-').pop()}</p>
+              <p className="text-sm text-muted-foreground">{user.idType.split('-').pop()}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

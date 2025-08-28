@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UserCard, type User } from '@/components/user-card';
 import { UserListItem } from '@/components/user-list-item';
+import { Button } from '@/components/ui/button';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
 
 const initialUsers: User[] = [
   { id: 'usr_1a2b3c4d', name: 'Alice Johnson', db: 'PostgreSQL', image: 'https://picsum.photos/200/200?random=1', imageHint: 'woman face', dateOfBirth: '1990-05-15', idNumber: 'X1234567', idType: 'Passport', idImage: 'https://picsum.photos/400/250?random=11', selfie: 'https://picsum.photos/200/200?random=1' },
@@ -18,17 +21,87 @@ export default function Home() {
   const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
   const [rejectedUsers, setRejectedUsers] = useState<User[]>([]);
 
-  const findAndMoveUser = (id: string, targetList: 'approved' | 'rejected') => {
+  const seedUsers = async () => {
+    const samples: Array<Omit<User, 'id'> & { status?: string }> = [
+      { name: 'Alice Johnson', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1990-05-15', idNumber: 'X1234567', idType: 'Passport', idImage: '', selfie: '', status: 'pending' },
+      { name: 'Bob Williams', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1985-09-22', idNumber: 'Y8765432', idType: 'Driving License', idImage: '', selfie: '', status: 'pending' },
+      { name: 'Charlie Brown', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '2000-01-30', idNumber: 'Z5432167', idType: 'ID Card', idImage: '', selfie: '', status: 'pending' },
+      { name: 'Diana Prince', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1992-11-08', idNumber: 'A1122334', idType: 'Passport', idImage: '', selfie: '', status: 'pending' },
+      { name: 'Ethan Hunt', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1978-07-12', idNumber: 'B9988776', idType: 'ID Card', idImage: '', selfie: '', status: 'pending' },
+    ];
+    try {
+      await Promise.all(samples.map(sample => addDoc(collection(db, 'kyc-users'), sample)));
+      // Reload users after seeding
+      const snap = await getDocs(collection(db, 'kyc-users'));
+      const fetched: User[] = snap.docs.map(d => {
+        const data: any = d.data();
+        return {
+          id: d.id,
+          name: data.name ?? 'Unknown',
+          db: data.db ?? 'Firestore',
+          image: data.image ?? '',
+          imageHint: data.imageHint ?? 'face',
+          dateOfBirth: data.dateOfBirth ?? '',
+          idNumber: data.idNumber ?? '',
+          idType: data.idType ?? '',
+          idImage: data.idImage ?? '',
+          selfie: data.selfie ?? '',
+        };
+      });
+      if (fetched.length > 0) setUsers(fetched);
+    } catch (e) {
+      console.error('Seeding users failed', e);
+    }
+  };
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'kyc-users'));
+        const fetched: User[] = snap.docs.map(d => {
+          const data: any = d.data();
+          return {
+            id: d.id,
+            name: data.name ?? 'Unknown',
+            db: data.db ?? 'Firestore',
+            image: data.image ?? '',
+            imageHint: data.imageHint ?? 'face',
+            dateOfBirth: data.dateOfBirth ?? '',
+            idNumber: data.idNumber ?? '',
+            idType: data.idType ?? '',
+            idImage: data.idImage ?? 'https://picsum.photos/400/250?random=20',
+            selfie: data.selfie ?? 'https://picsum.photos/200/200?random=21',
+          };
+        });
+        if (fetched.length > 0) setUsers(fetched);
+      } catch (err) {
+        console.error('Failed to load users from Firestore', err);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const findAndMoveUser = async (id: string, targetList: 'approved' | 'rejected') => {
     const userToMove = users.find(u => u.id === id);
     if (!userToMove) return;
 
+    // Optimistic UI update
     if (targetList === 'approved') {
       setApprovedUsers(prev => [userToMove, ...prev]);
     } else {
       setRejectedUsers(prev => [userToMove, ...prev]);
     }
-
     setUsers(currentUsers => currentUsers.filter(user => user.id !== id));
+
+    try {
+      await updateDoc(doc(db, 'kyc-users', id), {
+        status: targetList,
+        reviewedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error('Failed to update user status in Firestore', err);
+      // Optional: revert optimistic update if needed
+    }
   };
 
 
@@ -36,7 +109,10 @@ export default function Home() {
     <main className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-primary font-headline tracking-tight">UserDeck</h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-4xl font-bold text-primary font-headline tracking-tight">UserDeck</h1>
+            <Button variant="outline" onClick={seedUsers}>Seed Users</Button>
+          </div>
           <p className="text-muted-foreground mt-2 text-lg">
             Review and approve new user registrations.
           </p>
