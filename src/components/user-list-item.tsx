@@ -38,7 +38,7 @@ export function UserListItem({ user, status }: UserListItemProps) {
             </Avatar>
             <div className="overflow-hidden">
               <p className="font-semibold truncate">{user.name}</p>
-              <p className="text-sm text-muted-foreground">ID: {user.id.split('-').pop()}</p>
+              <p className="text-sm text-muted-foreground">{user.id.split('-').pop()}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -76,6 +76,10 @@ export function UserListItem({ user, status }: UserListItemProps) {
             <div className="flex items-center justify-between rounded-lg border p-3">
               <p className="text-sm font-medium">Date of Birth</p>
               <p className="text-sm text-muted-foreground">{user.dateOfBirth}</p>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <p className="text-sm font-medium">ID Type</p>
+              <p className="text-sm text-muted-foreground">{user.idType}</p>
             </div>
              <div className="flex items-center justify-between rounded-lg border p-3">
               <p className="text-sm font-medium">ID Number</p>

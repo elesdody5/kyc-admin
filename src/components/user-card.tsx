@@ -28,6 +28,7 @@ export type User = {
   imageHint: string;
   dateOfBirth: string;
   idNumber: string;
+  idType: string;
   idImage: string;
   selfie: string;
 };
@@ -152,6 +153,10 @@ export function UserCard({ user, onApprove, onReject }: UserCardProps) {
                <div className="flex items-center justify-between rounded-lg border p-3">
                 <p className="text-sm font-medium">Date of Birth</p>
                 <p className="text-sm text-muted-foreground">{user.dateOfBirth}</p>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <p className="text-sm font-medium">ID Type</p>
+                <p className="text-sm text-muted-foreground">{user.idType}</p>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <p className="text-sm font-medium">ID Number</p>
