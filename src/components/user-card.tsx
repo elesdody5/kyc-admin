@@ -90,8 +90,7 @@ export function UserCard({ user, onApprove, onReject }: UserCardProps) {
           </Avatar>
           <div className="overflow-hidden">
             <CardTitle className="truncate">{user.name}</CardTitle>
-            <CardDescription>ID: {user.id}</CardDescription>
-            <Badge variant="outline" className="mt-2">{user.db}</Badge>
+            <CardDescription>Awaiting review</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="flex-grow space-y-4">
@@ -153,10 +152,6 @@ export function UserCard({ user, onApprove, onReject }: UserCardProps) {
                <div className="flex items-center justify-between rounded-lg border p-3">
                 <p className="text-sm font-medium">Date of Birth</p>
                 <p className="text-sm text-muted-foreground">{user.dateOfBirth}</p>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <p className="text-sm font-medium">User ID</p>
-                <p className="text-sm text-muted-foreground">{user.id}</p>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <p className="text-sm font-medium">ID Number</p>
