@@ -5,11 +5,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Bot, Loader2, Sparkles } from 'lucide-react';
+import { Check, X, Bot, Loader2, Sparkles, Eye } from 'lucide-react';
 import { generateUserSummary } from '@/ai/flows/generate-user-summary';
 import { imageUrlToDataUrl } from '@/lib/image-utils';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export type User = {
   id: string;
@@ -64,50 +72,94 @@ export function UserCard({ user, onApprove, onReject }: UserCardProps) {
   };
 
   return (
-    <Card className={cn(
-        "flex flex-col transition-all duration-300 transform",
-        isActioned === 'approved' && "opacity-0 scale-95",
-        isActioned === 'rejected' && "opacity-0 scale-95 -rotate-3"
-      )}>
-      <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar className="h-16 w-16 border">
-          <AvatarImage src={user.image} alt={user.name} data-ai-hint={user.imageHint} />
-          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div className="overflow-hidden">
-          <CardTitle className="truncate">{user.name}</CardTitle>
-          <CardDescription>ID: {user.id}</CardDescription>
-          <Badge variant="outline" className="mt-2">{user.db}</Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow space-y-4">
-        {isLoadingSummary ? (
-          <div className="flex items-center justify-center rounded-lg border bg-muted/50 p-4 min-h-[100px]">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Generating summary...</span>
+    <Dialog>
+      <Card className={cn(
+          "flex flex-col transition-all duration-300 transform",
+          isActioned === 'approved' && "opacity-0 scale-95",
+          isActioned === 'rejected' && "opacity-0 scale-95 -rotate-3"
+        )}>
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Avatar className="h-16 w-16 border">
+            <AvatarImage src={user.image} alt={user.name} data-ai-hint={user.imageHint} />
+            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div className="overflow-hidden">
+            <CardTitle className="truncate">{user.name}</CardTitle>
+            <CardDescription>ID: {user.id}</CardDescription>
+            <Badge variant="outline" className="mt-2">{user.db}</Badge>
           </div>
-        ) : summary ? (
-          <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground min-h-[100px]">
-            <p className="font-semibold mb-2 flex items-center gap-2 text-foreground"><Bot className="h-4 w-4 text-primary" /> AI Summary</p>
-            {summary}
-          </div>
-        ) : (
-           <Button variant="outline" className="w-full" onClick={handleGenerateSummary} disabled={isLoadingSummary}>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate User Summary
+        </CardHeader>
+        <CardContent className="flex-grow space-y-4">
+          {isLoadingSummary ? (
+            <div className="flex items-center justify-center rounded-lg border bg-muted/50 p-4 min-h-[100px]">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Generating summary...</span>
+            </div>
+          ) : summary ? (
+            <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground min-h-[100px]">
+              <p className="font-semibold mb-2 flex items-center gap-2 text-foreground"><Bot className="h-4 w-4 text-primary" /> AI Summary</p>
+              {summary}
+            </div>
+          ) : (
+             <Button variant="outline" className="w-full" onClick={handleGenerateSummary} disabled={isLoadingSummary}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Generate User Summary
+            </Button>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-end gap-2 border-t pt-4">
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Eye className="h-5 w-5" />
+              <span className="sr-only">View Details</span>
+            </Button>
+          </DialogTrigger>
+          <Button variant="outline" size="lg" onClick={() => handleAction('reject')}>
+            <X className="mr-2 h-4 w-4" />
+            Reject
           </Button>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-end gap-2 border-t pt-4">
-        <Button variant="outline" size="lg" onClick={() => handleAction('reject')}>
-          <X className="mr-2 h-4 w-4" />
-          Reject
-        </Button>
-        <Button size="lg" onClick={() => handleAction('approve')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Check className="mr-2 h-4 w-4" />
-          Approve
-        </Button>
-      </CardFooter>
-    </Card>
+          <Button size="lg" onClick={() => handleAction('approve')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Check className="mr-2 h-4 w-4" />
+            Approve
+          </Button>
+        </CardFooter>
+      </Card>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-4">
+             <Avatar className="h-16 w-16 border">
+              <AvatarImage src={user.image} alt={user.name} data-ai-hint={user.imageHint} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            {user.name}
+          </DialogTitle>
+          <DialogDescription>
+            Here are the details for this pending user.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 pt-4">
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <p className="text-sm font-medium">Status</p>
+              <Badge variant="secondary">
+                Pending
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <p className="text-sm font-medium">User ID</p>
+              <p className="text-sm text-muted-foreground">{user.id}</p>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <p className="text-sm font-medium">Database</p>
+              <Badge variant="outline">{user.db}</Badge>
+            </div>
+            {summary && (
+              <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
+                <p className="font-semibold mb-2 flex items-center gap-2 text-foreground"><Bot className="h-4 w-4 text-primary" /> AI Summary</p>
+                {summary}
+              </div>
+            )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
