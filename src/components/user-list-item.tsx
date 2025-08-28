@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { User } from '@/components/user-card';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -51,7 +52,7 @@ export function UserListItem({ user, status }: UserListItemProps) {
           </div>
         </CardHeader>
       </Card>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-4">
              <Avatar className="h-16 w-16 border">
@@ -65,6 +66,7 @@ export function UserListItem({ user, status }: UserListItemProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <p className="text-sm font-medium">Status</p>
               <Badge variant={status === 'approved' ? 'default' : 'destructive'} className={cn(status === 'approved' && 'bg-green-600')}>
@@ -72,12 +74,27 @@ export function UserListItem({ user, status }: UserListItemProps) {
               </Badge>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
+              <p className="text-sm font-medium">Date of Birth</p>
+              <p className="text-sm text-muted-foreground">{user.dateOfBirth}</p>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
               <p className="text-sm font-medium">User ID</p>
               <p className="text-sm text-muted-foreground">{user.id}</p>
             </div>
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <p className="text-sm font-medium">Database</p>
-              <Badge variant="outline">{user.db}</Badge>
+             <div className="flex items-center justify-between rounded-lg border p-3">
+              <p className="text-sm font-medium">ID Number</p>
+              <p className="text-sm text-muted-foreground">{user.idNumber}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium mb-2">ID Image</p>
+                <Image src={user.idImage} alt="ID Image" width={400} height={250} className="rounded-lg border" data-ai-hint="id card" />
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-2">Selfie</p>
+                <Image src={user.selfie} alt="Selfie" width={200} height={200} className="rounded-lg border" data-ai-hint={user.imageHint}/>
+              </div>
             </div>
         </div>
       </DialogContent>

@@ -5,12 +5,12 @@ import { UserCard, type User } from '@/components/user-card';
 import { UserListItem } from '@/components/user-list-item';
 
 const initialUsers: User[] = [
-  { id: 'usr_1a2b3c4d', name: 'Alice Johnson', db: 'PostgreSQL', image: 'https://picsum.photos/200/200?random=1', imageHint: 'woman face' },
-  { id: 'usr_5e6f7g8h', name: 'Bob Williams', db: 'MongoDB', image: 'https://picsum.photos/200/200?random=2', imageHint: 'man portrait' },
-  { id: 'usr_9i0j1k2l', name: 'Charlie Brown', db: 'Firebase', image: 'https://picsum.photos/200/200?random=3', imageHint: 'person glasses' },
-  { id: 'usr_3m4n5o6p', name: 'Diana Prince', db: 'MySQL', image: 'https://picsum.photos/200/200?random=4', imageHint: 'woman smiling' },
-  { id: 'usr_q7r8s9t0', name: 'Ethan Hunt', db: 'Redis', image: 'https://picsum.photos/200/200?random=5', imageHint: 'man action' },
-  { id: 'usr_u1v2w3x4', name: 'Fiona Glenanne', db: 'Cassandra', image: 'https://picsum.photos/200/200?random=6', imageHint: 'woman sunglasses' },
+  { id: 'usr_1a2b3c4d', name: 'Alice Johnson', db: 'PostgreSQL', image: 'https://picsum.photos/200/200?random=1', imageHint: 'woman face', dateOfBirth: '1990-05-15', idNumber: 'X1234567', idImage: 'https://picsum.photos/400/250?random=11', selfie: 'https://picsum.photos/200/200?random=1' },
+  { id: 'usr_5e6f7g8h', name: 'Bob Williams', db: 'MongoDB', image: 'https://picsum.photos/200/200?random=2', imageHint: 'man portrait', dateOfBirth: '1985-09-22', idNumber: 'Y8765432', idImage: 'https://picsum.photos/400/250?random=12', selfie: 'https://picsum.photos/200/200?random=2' },
+  { id: 'usr_9i0j1k2l', name: 'Charlie Brown', db: 'Firebase', image: 'https://picsum.photos/200/200?random=3', imageHint: 'person glasses', dateOfBirth: '2000-01-30', idNumber: 'Z5432167', idImage: 'https://picsum.photos/400/250?random=13', selfie: 'https://picsum.photos/200/200?random=3' },
+  { id: 'usr_3m4n5o6p', name: 'Diana Prince', db: 'MySQL', image: 'https://picsum.photos/200/200?random=4', imageHint: 'woman smiling', dateOfBirth: '1992-11-08', idNumber: 'A1122334', idImage: 'https://picsum.photos/400/250?random=14', selfie: 'https://picsum.photos/200/200?random=4' },
+  { id: 'usr_q7r8s9t0', name: 'Ethan Hunt', db: 'Redis', image: 'https://picsum.photos/200/200?random=5', imageHint: 'man action', dateOfBirth: '1978-07-12', idNumber: 'B9988776', idImage: 'https://picsum.photos/400/250?random=15', selfie: 'https://picsum.photos/200/200?random=5' },
+  { id: 'usr_u1v2w3x4', name: 'Fiona Glenanne', db: 'Cassandra', image: 'https://picsum.photos/200/200?random=6', imageHint: 'woman sunglasses', dateOfBirth: '1988-03-25', idNumber: 'C5544332', idImage: 'https://picsum.photos/400/250?random=16', selfie: 'https://picsum.photos/200/200?random=6' },
 ];
 
 export default function Home() {
