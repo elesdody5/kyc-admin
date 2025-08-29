@@ -20,9 +20,10 @@ import { Button } from './ui/button';
 type UserListItemProps = {
   user: User;
   status: 'approved' | 'rejected';
+  onChangeStatus?: (id: string, target: 'approved' | 'rejected' | 'pending') => void;
 };
 
-export function UserListItem({ user, status }: UserListItemProps) {
+export function UserListItem({ user, status, onChangeStatus }: UserListItemProps) {
   const statusIcon = status === 'approved' ? 
     <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
     <XCircle className="h-5 w-5 text-red-500" />;
@@ -96,6 +97,27 @@ export function UserListItem({ user, status }: UserListItemProps) {
                 <Image src={user.selfie} alt="Selfie" width={200} height={200} className="rounded-lg border" data-ai-hint={user.imageHint}/>
               </div>
             </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          {status === 'approved' ? (
+            <>
+              <Button variant="outline" onClick={() => onChangeStatus?.(user.id, 'rejected')}>
+                Mark Rejected
+              </Button>
+              <Button onClick={() => onChangeStatus?.(user.id, 'pending')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                Revert to Pending
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => onChangeStatus?.(user.id, 'approved')}>
+                Mark Approved
+              </Button>
+              <Button onClick={() => onChangeStatus?.(user.id, 'pending')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                Revert to Pending
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

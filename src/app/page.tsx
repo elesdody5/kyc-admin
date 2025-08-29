@@ -6,17 +6,10 @@ import { UserListItem } from '@/components/user-list-item';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { db } from '@/lib/firebase';
-import { collection, doc, updateDoc, serverTimestamp, addDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
-const initialUsers: User[] = [
-  { id: 'usr_1a2b3c4d', name: 'Alice Johnson', db: 'PostgreSQL', image: 'https://picsum.photos/200/200?random=1', imageHint: 'woman face', dateOfBirth: '1990-05-15', idNumber: 'X1234567', idType: 'Passport', idImage: 'https://picsum.photos/400/250?random=11', selfie: 'https://picsum.photos/200/200?random=1' },
-  { id: 'usr_5e6f7g8h', name: 'Bob Williams', db: 'MongoDB', image: 'https://picsum.photos/200/200?random=2', imageHint: 'man portrait', dateOfBirth: '1985-09-22', idNumber: 'Y8765432', idType: 'Driving License', idImage: 'https://picsum.photos/400/250?random=12', selfie: 'https://picsum.photos/200/200?random=2' },
-  { id: 'usr_9i0j1k2l', name: 'Charlie Brown', db: 'Firebase', image: 'https://picsum.photos/200/200?random=3', imageHint: 'person glasses', dateOfBirth: '2000-01-30', idNumber: 'Z5432167', idType: 'ID Card', idImage: 'https://picsum.photos/400/250?random=13', selfie: 'https://picsum.photos/200/200?random=3' },
-  { id: 'usr_3m4n5o6p', name: 'Diana Prince', db: 'MySQL', image: 'https://picsum.photos/200/200?random=4', imageHint: 'woman smiling', dateOfBirth: '1992-11-08', idNumber: 'A1122334', idType: 'Passport', idImage: 'https://picsum.photos/400/250?random=14', selfie: 'https://picsum.photos/200/200?random=4' },
-  { id: 'usr_q7r8s9t0', name: 'Ethan Hunt', db: 'Redis', image: 'https://picsum.photos/200/200?random=5', imageHint: 'man action', dateOfBirth: '1978-07-12', idNumber: 'B9988776', idType: 'ID Card', idImage: 'https://picsum.photos/400/250?random=15', selfie: 'https://picsum.photos/200/200?random=5' },
-  { id: 'usr_u1v2w3x4', name: 'Fiona Glenanne', db: 'Cassandra', image: 'https://picsum.photos/200/200?random=6', imageHint: 'woman sunglasses', dateOfBirth: '1988-03-25', idNumber: 'C5544332', idType: 'Driving License', idImage: 'https://picsum.photos/400/250?random=16', selfie: 'https://picsum.photos/200/200?random=6' },
-];
+const initialUsers: User[] = [];
 
 export default function Home() {
   const [users, setUsers] = useState<User[]>(initialUsers);
@@ -26,24 +19,7 @@ export default function Home() {
   const { toast } = useToast();
   const prevUserCount = useRef(users.length);
 
-  const seedUsers = async () => {
-    const samples: Array<Omit<User, 'id'> & { status?: string }> = [
-      { name: 'Alice Johnson', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1990-05-15', idNumber: 'X1234567', idType: 'Passport', idImage: '', selfie: '', status: 'pending' },
-      { name: 'Bob Williams', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1985-09-22', idNumber: 'Y8765432', idType: 'Driving License', idImage: '', selfie: '', status: 'pending' },
-      { name: 'Charlie Brown', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '2000-01-30', idNumber: 'Z5432167', idType: 'ID Card', idImage: '', selfie: '', status: 'pending' },
-      { name: 'Diana Prince', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1992-11-08', idNumber: 'A1122334', idType: 'Passport', idImage: '', selfie: '', status: 'pending' },
-      { name: 'Ethan Hunt', db: 'Firestore', image: '', imageHint: 'face', dateOfBirth: '1978-07-12', idNumber: 'B9988776', idType: 'ID Card', idImage: '', selfie: '', status: 'pending' },
-    ];
-    try {
-      await Promise.all(samples.map(sample => addDoc(collection(db, 'kyc-users'), sample)));
-      toast({
-        title: 'Users seeded!',
-        description: 'New users have been added to the list.',
-      });
-    } catch (e) {
-      console.error('Seeding users failed', e);
-    }
-  };
+  // Seed functionality removed in production builds
 
   useEffect(() => {
     const colRef = collection(db, 'kyc-users');
@@ -115,6 +91,32 @@ export default function Home() {
     }
   };
 
+  const updateUserStatus = async (id: string, target: 'approved' | 'rejected' | 'pending') => {
+    // update UI optimistically
+    // Find user in any list
+    let user: User | undefined = users.find(u => u.id === id) || approvedUsers.find(u => u.id === id) || rejectedUsers.find(u => u.id === id);
+    if (!user) return;
+
+    // Remove from all lists
+    setUsers(prev => prev.filter(u => u.id !== id));
+    setApprovedUsers(prev => prev.filter(u => u.id !== id));
+    setRejectedUsers(prev => prev.filter(u => u.id !== id));
+
+    if (target === 'approved') setApprovedUsers(prev => [user!, ...prev]);
+    else if (target === 'rejected') setRejectedUsers(prev => [user!, ...prev]);
+    else setUsers(prev => [user!, ...prev]);
+
+    try {
+      await updateDoc(doc(db, 'kyc-users', id), {
+        status: target,
+        reviewedAt: target === 'pending' ? null : serverTimestamp(),
+      });
+    } catch (err) {
+      console.error('Failed to update user status in Firestore', err);
+      // no rollback for now
+    }
+  };
+
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -129,7 +131,6 @@ export default function Home() {
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
-              <Button variant="outline" onClick={seedUsers}>Seed Users</Button>
             </div>
           </div>
           <p className="text-muted-foreground mt-2 text-lg">
@@ -173,7 +174,7 @@ export default function Home() {
                       const refVal = (u.reference ?? '').toString().toLowerCase();
                       return refVal.includes(searchTerm.trim().toLowerCase());
                     })
-                    .map(user => <UserListItem key={user.id} user={user} status="approved" />)}
+                    .map(user => <UserListItem key={user.id} user={user} status="approved" onChangeStatus={updateUserStatus} />)}
                 </div>
               ) : (
                 <p className="text-muted-foreground">No users approved yet.</p>
@@ -181,7 +182,7 @@ export default function Home() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-primary mb-4">Rejected Users</h2>
-              {rejectedUsers.length > 0 ? (
+                  {rejectedUsers.length > 0 ? (
                 <div className="space-y-3">
                   {rejectedUsers
                     .filter(u => {
@@ -189,7 +190,7 @@ export default function Home() {
                       const refVal = (u.reference ?? '').toString().toLowerCase();
                       return refVal.includes(searchTerm.trim().toLowerCase());
                     })
-                    .map(user => <UserListItem key={user.id} user={user} status="rejected" />)}
+                    .map(user => <UserListItem key={user.id} user={user} status="rejected" onChangeStatus={updateUserStatus} />)}
                 </div>
               ) : (
                 <p className="text-muted-foreground">No users rejected yet.</p>
