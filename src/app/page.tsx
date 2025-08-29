@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { UserCard, type User } from '@/components/user-card';
 import { UserListItem } from '@/components/user-list-item';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, serverTimestamp, addDoc, onSnapshot } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 const initialUsers: User[] = [
   { id: 'usr_1a2b3c4d', name: 'Alice Johnson', db: 'PostgreSQL', image: 'https://picsum.photos/200/200?random=1', imageHint: 'woman face', dateOfBirth: '1990-05-15', idNumber: 'X1234567', idType: 'Passport', idImage: 'https://picsum.photos/400/250?random=11', selfie: 'https://picsum.photos/200/200?random=1' },
@@ -20,6 +22,9 @@ export default function Home() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
   const [rejectedUsers, setRejectedUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
+  const prevUserCount = useRef(users.length);
 
   const seedUsers = async () => {
     const samples: Array<Omit<User, 'id'> & { status?: string }> = [
@@ -31,11 +36,24 @@ export default function Home() {
     ];
     try {
       await Promise.all(samples.map(sample => addDoc(collection(db, 'kyc-users'), sample)));
-      // Reload users after seeding
-      const snap = await getDocs(collection(db, 'kyc-users'));
-      const fetched: User[] = snap.docs.map(d => {
+      toast({
+        title: 'Users seeded!',
+        description: 'New users have been added to the list.',
+      });
+    } catch (e) {
+      console.error('Seeding users failed', e);
+    }
+  };
+
+  useEffect(() => {
+    const colRef = collection(db, 'kyc-users');
+    const unsubscribe = onSnapshot(colRef, snap => {
+      const pending: User[] = [];
+      const approved: User[] = [];
+      const rejected: User[] = [];
+      snap.docs.forEach(d => {
         const data: any = d.data();
-        return {
+        const user: User = {
           id: d.id,
           name: data.name ?? 'Unknown',
           db: data.db ?? 'Firestore',
@@ -44,42 +62,35 @@ export default function Home() {
           dateOfBirth: data.dateOfBirth ?? '',
           idNumber: data.idNumber ?? '',
           idType: data.idType ?? '',
-          idImage: data.idImage ?? '',
-          selfie: data.selfie ?? '',
+          idImage: data.idImage ?? 'https://picsum.photos/400/250?random=20',
+          selfie: data.selfie ?? 'https://picsum.photos/200/200?random=21',
+          reference: data.reference ?? data.refNumber ?? undefined,
+          faceMatchScore: data.faceMatchScore != null ? Number(data.faceMatchScore) : undefined,
+          confidence: data.confidence != null ? Number(data.confidence) : undefined,
         };
+        if (data.status === 'approved') approved.push(user);
+        else if (data.status === 'rejected') rejected.push(user);
+        else pending.push(user);
       });
-      if (fetched.length > 0) setUsers(fetched);
-    } catch (e) {
-      console.error('Seeding users failed', e);
-    }
-  };
+      setUsers(pending);
+      setApprovedUsers(approved);
+      setRejectedUsers(rejected);
+    }, err => {
+      console.error('Failed to listen to users from Firestore', err);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const snap = await getDocs(collection(db, 'kyc-users'));
-        const fetched: User[] = snap.docs.map(d => {
-          const data: any = d.data();
-          return {
-            id: d.id,
-            name: data.name ?? 'Unknown',
-            db: data.db ?? 'Firestore',
-            image: data.image ?? '',
-            imageHint: data.imageHint ?? 'face',
-            dateOfBirth: data.dateOfBirth ?? '',
-            idNumber: data.idNumber ?? '',
-            idType: data.idType ?? '',
-            idImage: data.idImage ?? 'https://picsum.photos/400/250?random=20',
-            selfie: data.selfie ?? 'https://picsum.photos/200/200?random=21',
-          };
-        });
-        if (fetched.length > 0) setUsers(fetched);
-      } catch (err) {
-        console.error('Failed to load users from Firestore', err);
-      }
-    };
-    loadUsers();
-  }, []);
+    const currentUserCount = users.length;
+    if (currentUserCount > prevUserCount.current) {
+      toast({
+        title: 'New User Added!',
+        description: `${currentUserCount - prevUserCount.current} new user(s) added.`,
+      });
+    }
+    prevUserCount.current = currentUserCount;
+  }, [users]);
 
   const findAndMoveUser = async (id: string, targetList: 'approved' | 'rejected') => {
     const userToMove = users.find(u => u.id === id);
@@ -109,9 +120,17 @@ export default function Home() {
     <main className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-4xl font-bold text-primary font-headline tracking-tight">UserDeck</h1>
-            <Button variant="outline" onClick={seedUsers}>Seed Users</Button>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-4xl font-bold text-primary font-headline tracking-tight">Kyc Admin</h1>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Input
+                className="w-full sm:w-80"
+                placeholder="Search by reference..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <Button variant="outline" onClick={seedUsers}>Seed Users</Button>
+            </div>
           </div>
           <p className="text-muted-foreground mt-2 text-lg">
             Review and approve new user registrations.
@@ -120,7 +139,13 @@ export default function Home() {
 
         {users.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {users.map(user => (
+            {users
+              .filter(u => {
+                if (!searchTerm.trim()) return true;
+                const refVal = (u.reference ?? '').toString().toLowerCase();
+                return refVal.includes(searchTerm.trim().toLowerCase());
+              })
+              .map(user => (
               <UserCard 
                 key={user.id} 
                 user={user} 
@@ -132,7 +157,7 @@ export default function Home() {
         ) : (
           <div className="flex flex-col items-center justify-center text-center py-24 rounded-lg border-2 border-dashed border-border mt-10">
             <h2 className="text-2xl font-semibold text-primary">All Done!</h2>
-            <p className="text-muted-foreground mt-2">You've reviewed all pending users.</p>
+            <p className="text-muted-foreground mt-2">You&apos;ve reviewed all pending users.</p>
           </div>
         )}
 
@@ -142,7 +167,13 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-primary mb-4">Approved Users</h2>
               {approvedUsers.length > 0 ? (
                 <div className="space-y-3">
-                  {approvedUsers.map(user => <UserListItem key={user.id} user={user} status="approved" />)}
+                  {approvedUsers
+                    .filter(u => {
+                      if (!searchTerm.trim()) return true;
+                      const refVal = (u.reference ?? '').toString().toLowerCase();
+                      return refVal.includes(searchTerm.trim().toLowerCase());
+                    })
+                    .map(user => <UserListItem key={user.id} user={user} status="approved" />)}
                 </div>
               ) : (
                 <p className="text-muted-foreground">No users approved yet.</p>
@@ -152,7 +183,13 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-primary mb-4">Rejected Users</h2>
               {rejectedUsers.length > 0 ? (
                 <div className="space-y-3">
-                  {rejectedUsers.map(user => <UserListItem key={user.id} user={user} status="rejected" />)}
+                  {rejectedUsers
+                    .filter(u => {
+                      if (!searchTerm.trim()) return true;
+                      const refVal = (u.reference ?? '').toString().toLowerCase();
+                      return refVal.includes(searchTerm.trim().toLowerCase());
+                    })
+                    .map(user => <UserListItem key={user.id} user={user} status="rejected" />)}
                 </div>
               ) : (
                 <p className="text-muted-foreground">No users rejected yet.</p>

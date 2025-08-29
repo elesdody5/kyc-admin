@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'UserDeck',
+  title: 'Kyc Admin',
   description: 'Approve or reject new users for your platform.',
 };
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,9 @@ export type User = {
   idType: string;
   idImage: string;
   selfie: string;
+  reference?: string;
+  faceMatchScore?: number;
+  confidence?: number;
 };
 
 type UserCardProps = {
@@ -108,9 +111,41 @@ export function UserCard({ user, onApprove, onReject }: UserCardProps) {
                   Pending
                 </Badge>
               </div>
-               <div className="flex items-center justify-between rounded-lg border p-3">
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <p className="text-sm font-medium">Face Match Score</p>
+                <p className="text-sm text-muted-foreground">{user.faceMatchScore != null ? `${Math.round(user.faceMatchScore * 100)}%` : '-'}</p>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <p className="text-sm font-medium">Confidence Score</p>
+                <div className="flex items-center gap-2">
+                  {user.confidence != null ? (
+                    <>
+                      <div className="w-16 bg-muted rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all ${
+                            user.confidence >= 0.8 ? 'bg-green-500' : 
+                            user.confidence >= 0.6 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${Math.round(user.confidence * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {Math.round(user.confidence * 100)}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
                 <p className="text-sm font-medium">Date of Birth</p>
                 <p className="text-sm text-muted-foreground">{user.dateOfBirth}</p>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <p className="text-sm font-medium">Reference</p>
+                <p className="text-sm text-muted-foreground">{user.reference ?? '-'}</p>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <p className="text-sm font-medium">ID Type</p>
